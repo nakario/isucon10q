@@ -20,7 +20,7 @@ func getChairDetail(c echo.Context) error {
 
 	chair := Chair{}
 	query := `SELECT * FROM chair WHERE id = ?`
-	err = db.Get(&chair, query, id)
+	err = db_chair.Get(&chair, query, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.Echo().Logger.Infof("requested id's chair not found : %v", id)
@@ -149,7 +149,7 @@ func searchChairs(c echo.Context) error {
 	limitOffset := " ORDER BY popularity DESC, id ASC LIMIT ? OFFSET ?"
 
 	var res ChairSearchResponse
-	err = db.Get(&res.Count, countQuery+searchCondition, params...)
+	err = db_chair.Get(&res.Count, countQuery+searchCondition, params...)
 	if err != nil {
 		c.Logger().Errorf("searchChairs DB execution error : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -157,7 +157,7 @@ func searchChairs(c echo.Context) error {
 
 	chairs := []Chair{}
 	params = append(params, perPage, page*perPage)
-	err = db.Select(&chairs, searchQuery+searchCondition+limitOffset, params...)
+	err = db_chair.Select(&chairs, searchQuery+searchCondition+limitOffset, params...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return NoIndentJSON(c, http.StatusOK, ChairSearchResponse{Count: 0, Chairs: []Chair{}})
@@ -178,7 +178,7 @@ func getChairSearchCondition(c echo.Context) error {
 func getLowPricedChair(c echo.Context) error {
 	var chairs []Chair
 	query := `SELECT * FROM chair WHERE stock > 0 ORDER BY price ASC, id ASC LIMIT ?`
-	err := db.Select(&chairs, query, Limit)
+	err := db_chair.Select(&chairs, query, Limit)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.Logger().Error("getLowPricedChair not found")
@@ -201,7 +201,7 @@ func getEstateDetail(c echo.Context) error {
 	}
 
 	var estate Estate
-	err = db.Get(&estate, "SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate WHERE id = ?", id)
+	err = db_estate.Get(&estate, "SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate WHERE id = ?", id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.Echo().Logger.Infof("getEstateDetail estate id %v not found", id)
@@ -299,7 +299,7 @@ func searchEstates(c echo.Context) error {
 	limitOffset := " ORDER BY popularity DESC, id ASC LIMIT ? OFFSET ?"
 
 	var res EstateSearchResponse
-	err = db.Get(&res.Count, countQuery+searchCondition, params...)
+	err = db_estate.Get(&res.Count, countQuery+searchCondition, params...)
 	if err != nil {
 		c.Logger().Errorf("searchEstates DB execution error : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -307,7 +307,7 @@ func searchEstates(c echo.Context) error {
 
 	estates := []Estate{}
 	params = append(params, perPage, page*perPage)
-	err = db.Select(&estates, searchQuery+searchCondition+limitOffset, params...)
+	err = db_estate.Select(&estates, searchQuery+searchCondition+limitOffset, params...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return NoIndentJSON(c, http.StatusOK, EstateSearchResponse{Count: 0, Estates: []Estate{}})
@@ -324,7 +324,7 @@ func searchEstates(c echo.Context) error {
 func getLowPricedEstate(c echo.Context) error {
 	estates := make([]Estate, 0, Limit)
 	query := `SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate ORDER BY rent ASC, id ASC LIMIT ?`
-	err := db.Select(&estates, query, Limit)
+	err := db_estate.Select(&estates, query, Limit)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.Logger().Error("getLowPricedEstate not found")
@@ -346,7 +346,7 @@ func searchRecommendedEstateWithChair(c echo.Context) error {
 
 	chair := Chair{}
 	query := `SELECT * FROM chair WHERE id = ?`
-	err = db.Get(&chair, query, id)
+	err = db_chair.Get(&chair, query, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.Logger().Infof("Requested chair id \"%v\" not found", id)
@@ -361,7 +361,7 @@ func searchRecommendedEstateWithChair(c echo.Context) error {
 	h := chair.Height
 	d := chair.Depth
 	query = `SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate WHERE (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) ORDER BY popularity DESC, id ASC LIMIT ?`
-	err = db.Select(&estates, query, w, h, w, d, h, w, h, d, d, w, d, h, Limit)
+	err = db_estate.Select(&estates, query, w, h, w, d, h, w, h, d, d, w, d, h, Limit)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return NoIndentJSON(c, http.StatusOK, EstateListResponse{[]Estate{}})

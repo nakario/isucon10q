@@ -60,7 +60,7 @@ func postChair(c echo.Context) error {
 	}
 
 	query := queryBuilder.String()[:queryBuilder.Len()-1] // remove trailing ","
-	_, err = db.Exec(query, queryParams...)
+	_, err = db_chair.Exec(query, queryParams...)
 	if err != nil {
 		c.Logger().Errorf("failed to insert chairs: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -88,7 +88,7 @@ func buyChair(c echo.Context) error {
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	tx, err := db.Beginx()
+	tx, err := db_chair.Beginx()
 	if err != nil {
 		c.Echo().Logger.Errorf("failed to create transaction : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -169,7 +169,7 @@ func postEstate(c echo.Context) error {
 	}
 
 	query := queryBuilder.String()[:queryBuilder.Len()-1] // remove trailing ","
-	_, err = db.Exec(query, queryParams...)
+	_, err = db_estate.Exec(query, queryParams...)
 	if err != nil {
 		c.Logger().Errorf("failed to insert estates: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -198,7 +198,7 @@ func postEstateRequestDocument(c echo.Context) error {
 
 	estate := Estate{}
 	query := `SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate WHERE id = ?`
-	err = db.Get(&estate, query, id)
+	err = db_estate.Get(&estate, query, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return c.NoContent(http.StatusNotFound)
@@ -224,7 +224,7 @@ func searchEstateNazotte(c echo.Context) error {
 
 	estatesInBoundingBox := []Estate{}
 	query := fmt.Sprintf(`SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate WHERE ST_Contains(ST_PolygonFromText(%s, 4326), geom) ORDER BY popularity DESC, id ASC`, coordinates.coordinatesToText())
-	err = db.Select(&estatesInBoundingBox, query)
+	err = db_estate.Select(&estatesInBoundingBox, query)
 	if err == sql.ErrNoRows {
 		c.Echo().Logger.Infof("select * from estate where ST_Contains ...", err)
 		return NoIndentJSON(c, http.StatusOK, EstateSearchResponse{Count: 0, Estates: []Estate{}})

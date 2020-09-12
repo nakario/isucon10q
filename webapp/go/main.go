@@ -102,6 +102,18 @@ func initialize(c echo.Context) error {
 	go initDBChair(c, chChair)
 	chEstate := make(chan error)
 	go initDBEstate(c, chEstate)
+	for i := 0; i < 2; i++ {
+		select {
+		case err := <- chChair:
+			if err != nil {
+				return c.NoContent(http.StatusInternalServerError)
+			}
+		case err := <- chEstate:
+			if err != nil {
+				return c.NoContent(http.StatusInternalServerError)
+			}
+		}
+	}
 
 	return c.JSON(http.StatusOK, InitializeResponse{
 		Language: "go",
