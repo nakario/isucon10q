@@ -35,9 +35,8 @@ func postChair(c echo.Context) error {
 	queryBuilder := &strings.Builder{}
 	queryBuilder.WriteString("INSERT INTO chair(id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock) VALUES ")
 	queryParams := make([]interface{}, 0, len(records) * 13)
-	for i, row := range records {
-		p := i * 13
-		queryBuilder.WriteString(fmt.Sprintf("($%d,$%d,$%d,$%d,$%d,$%d,$%d,$%d,$%d,$%d,$%d,$%d,$%d),", p+1,p+2,p+3,p+4,p+5,p+6,p+7,p+8,p+9,p+10,p+11,p+12,p+13))
+	for _, row := range records {
+		queryBuilder.WriteString("(?,?,?,?,?,?,?,?,?,?,?,?,?),")
 
 		rm := RecordMapper{Record: row}
 		id := rm.NextInt()
@@ -66,7 +65,7 @@ func postChair(c echo.Context) error {
 		c.Logger().Errorf("failed to insert chairs: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	
+
 	return c.NoContent(http.StatusCreated)
 }
 
@@ -142,13 +141,12 @@ func postEstate(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	
+
 	queryBuilder := &strings.Builder{}
 	queryBuilder.WriteString("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES ")
 	queryParams := make([]interface{}, 0, len(records) * 12)
-	for i, row := range records {
-		p := i * 12
-		queryBuilder.WriteString(fmt.Sprintf("($%d,$%d,$%d,$%d,$%d,$%d,$%d,$%d,$%d,$%d,$%d,$%d),", p+1,p+2,p+3,p+4,p+5,p+6,p+7,p+8,p+9,p+10,p+11,p+12))
+	for _, row := range records {
+		queryBuilder.WriteString("(?,?,?,?,?,?,?,?,?,?,?,?),")
 
 		rm := RecordMapper{Record: row}
 		id := rm.NextInt()
