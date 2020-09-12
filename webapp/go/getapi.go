@@ -217,6 +217,9 @@ func getEstateDetail(c echo.Context) error {
 func searchEstates(c echo.Context) error {
 	conditions := make([]string, 0)
 	params := make([]interface{}, 0)
+	rentUsed := false
+	rentKey := ""
+	rentOnly := true
 
 	if c.QueryParam("doorHeightRangeId") != "" {
 		doorHeight, err := getRange(estateSearchCondition.DoorHeight, c.QueryParam("doorHeightRangeId"))
@@ -228,10 +231,12 @@ func searchEstates(c echo.Context) error {
 		if doorHeight.Min != -1 {
 			conditions = append(conditions, "door_height >= ?")
 			params = append(params, doorHeight.Min)
+			rentOnly = false
 		}
 		if doorHeight.Max != -1 {
 			conditions = append(conditions, "door_height < ?")
 			params = append(params, doorHeight.Max)
+			rentOnly = false
 		}
 	}
 
@@ -245,10 +250,12 @@ func searchEstates(c echo.Context) error {
 		if doorWidth.Min != -1 {
 			conditions = append(conditions, "door_width >= ?")
 			params = append(params, doorWidth.Min)
+			rentOnly = false
 		}
 		if doorWidth.Max != -1 {
 			conditions = append(conditions, "door_width < ?")
 			params = append(params, doorWidth.Max)
+			rentOnly = false
 		}
 	}
 
@@ -262,10 +269,14 @@ func searchEstates(c echo.Context) error {
 		if estateRent.Min != -1 {
 			conditions = append(conditions, "rent >= ?")
 			params = append(params, estateRent.Min)
+			rentKey = RentToId(int64(estateRent.Min))
+			rentUsed = true
 		}
 		if estateRent.Max != -1 {
 			conditions = append(conditions, "rent < ?")
 			params = append(params, estateRent.Max)
+			rentKey = RentToId(int64(estateRent.Max - 1))
+			rentUsed = true
 		}
 	}
 
@@ -273,6 +284,7 @@ func searchEstates(c echo.Context) error {
 		for _, f := range strings.Split(c.QueryParam("features"), ",") {
 			conditions = append(conditions, "features like concat('%', ?, '%')")
 			params = append(params, f)
+			rentOnly = false
 		}
 	}
 
@@ -299,10 +311,14 @@ func searchEstates(c echo.Context) error {
 	limitOffset := " ORDER BY popularity DESC, id ASC LIMIT ? OFFSET ?"
 
 	var res EstateSearchResponse
-	err = db.Get(&res.Count, countQuery+searchCondition, params...)
-	if err != nil {
-		c.Logger().Errorf("searchEstates DB execution error : %v", err)
-		return c.NoContent(http.StatusInternalServerError)
+	if rentOnly && rentUsed {
+		rentCountServer.Get(rentKey, &res.Count)
+	} else {
+		err = db.Get(&res.Count, countQuery+searchCondition, params...)
+		if err != nil {
+			c.Logger().Errorf("searchEstates DB execution error : %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
 	}
 
 	estates := []Estate{}

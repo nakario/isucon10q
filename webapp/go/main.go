@@ -20,6 +20,9 @@ import (
 
 const Limit = 20
 const NazotteLimit = 50
+const RedisHostPrivateIPAddress = "10.162.10.102" // ここで指定したサーバーに(Redis /SyncMapServerを) 建てる
+var isMasterServerIP = MyServerIsOnMasterServerIP()
+var rentCountServer = NewSyncMapServerConn(GetMasterServerAddress()+":8884", isMasterServerIP)
 
 var db *sqlx.DB
 var mySQLConnectionData *MySQLConnectionEnv
@@ -80,6 +83,27 @@ func initialize(c echo.Context) error {
 			c.Logger().Errorf("Initialize script error : %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
+	}
+
+	rentCountServer.server.InitializeFunction = func() {
+		// log.Println("rentCountServer init")
+		estates := make([]Estate, 0)
+		err := db.Select(&estates, "SELECT * FROM `estate`")
+		if err != nil {
+			panic(err)
+		}
+		// 流石に全部あると仮定
+		localMap := map[string]interface{}{}
+		for _, e := range estates {
+			key := RentToId(e.Rent)
+			count, ok := localMap[key]
+			if ok {
+				localMap[key] = count.(int) + 1
+			} else {
+				localMap[key] = 1
+			}
+		}
+		rentCountServer.MSet(localMap)
 	}
 
 	return c.JSON(http.StatusOK, InitializeResponse{

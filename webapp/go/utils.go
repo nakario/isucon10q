@@ -130,3 +130,17 @@ func (r *RecordMapper) NextString() string {
 func (r *RecordMapper) Err() error {
 	return r.err
 }
+
+func RentToId(rent int64) string {
+	// IncrBy
+	if rent < 50000 {
+		return "0"
+	}
+	if rent < 100000 {
+		return "1"
+	}
+	if rent < 150000 {
+		return "2"
+	}
+	return "3"
+}
