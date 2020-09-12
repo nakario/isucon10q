@@ -93,6 +93,7 @@ func initialize(c echo.Context) error {
 		}
 		_, err = db.Exec("UPDATE estate SET geom = ST_GeomFromText(CONCAT(POINT(?,?)), 4326) WHERE id = ?", lat, lon, id)
 		if err != nil {
+			c.Logger().Errorf("Initialize script error : %v %v %v", lat, lon, id)
 			c.Logger().Errorf("Initialize script error : %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
