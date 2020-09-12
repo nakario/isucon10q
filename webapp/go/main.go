@@ -153,7 +153,7 @@ func main() {
 	e.GET("/api/recommended_estate/:id", searchRecommendedEstateWithChair)
 
 	mySQLConnectionDataChair = NewMySQLConnectionEnv("MYSQL_HOST_CHAIR")
-	mySQLConnectionDataEstate = NewMySQLConnectionEnv("MYSQL_HOST_Estate")
+	mySQLConnectionDataEstate = NewMySQLConnectionEnv("MYSQL_HOST_ESTATE")
 
 	var err error
 	db_chair, err = mySQLConnectionDataChair.ConnectDB()
