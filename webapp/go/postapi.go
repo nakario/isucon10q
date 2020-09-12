@@ -143,10 +143,10 @@ func postEstate(c echo.Context) error {
 
 
 	queryBuilder := &strings.Builder{}
-	queryBuilder.WriteString("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES ")
-	queryParams := make([]interface{}, 0, len(records) * 12)
+	queryBuilder.WriteString("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, geom, rent, door_height, door_width, features, popularity) VALUES ")
+	queryParams := make([]interface{}, 0, len(records) * 14)
 	for _, row := range records {
-		queryBuilder.WriteString("(?,?,?,?,?,?,?,?,?,?,?,?),")
+		queryBuilder.WriteString("(?,?,?,?,?,?,?,ST_GeomFromText(CONCAT('POINT(',?,' ',?,')')), 4326),?,?,?,?,?),")
 
 		rm := RecordMapper{Record: row}
 		id := rm.NextInt()
@@ -165,7 +165,7 @@ func postEstate(c echo.Context) error {
 			c.Logger().Errorf("failed to read record: %v", err)
 			return c.NoContent(http.StatusBadRequest)
 		}
-		queryParams = append(queryParams, id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity)
+		queryParams = append(queryParams, id, name, description, thumbnail, address, latitude, longitude, latitude, longitude, rent, doorHeight, doorWidth, features, popularity)
 	}
 
 	query := queryBuilder.String()[:queryBuilder.Len()-1] // remove trailing ","
@@ -224,10 +224,10 @@ func searchEstateNazotte(c echo.Context) error {
 
 	b := coordinates.getBoundingBox()
 	estatesInBoundingBox := []Estate{}
-	query := fmt.Sprintf(`SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(CONCAT('POINT(', latitude, ' ', longitude, ')'))) ORDER BY popularity DESC, id ASC`, coordinates.coordinatesToText())
+	query := fmt.Sprintf(`SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? AND ST_Contains(ST_PolygonFromText(%s, 4326), geom)) ORDER BY popularity DESC, id ASC`, coordinates.coordinatesToText())
 	err = db.Select(&estatesInBoundingBox, query, b.BottomRightCorner.Latitude, b.TopLeftCorner.Latitude, b.BottomRightCorner.Longitude, b.TopLeftCorner.Longitude)
 	if err == sql.ErrNoRows {
-		c.Echo().Logger.Infof("select * from estate where latitude ...", err)
+		c.Echo().Logger.Infof("select * from estate where ST_Contains ...", err)
 		return NoIndentJSON(c, http.StatusOK, EstateSearchResponse{Count: 0, Estates: []Estate{}})
 	} else if err != nil {
 		c.Echo().Logger.Errorf("database execution error : %v", err)
