@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -32,8 +33,8 @@ func getChairDetail(c echo.Context) error {
 		c.Echo().Logger.Infof("requested id's chair is sold out : %v", id)
 		return c.NoContent(http.StatusNotFound)
 	}
-
-	return c.JSON(http.StatusOK, chair)
+	chairjson, err := json.Marshal(chair)
+	return NoIndentJSON(c, http.StatusOK, chairjson)
 }
 
 func searchChairs(c echo.Context) error {
@@ -161,7 +162,7 @@ func searchChairs(c echo.Context) error {
 	err = db.Select(&chairs, searchQuery+searchCondition+limitOffset, params...)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return c.JSON(http.StatusOK, ChairSearchResponse{Count: 0, Chairs: []Chair{}})
+			return NoIndentJSON(c, http.StatusOK, ChairSearchResponse{Count: 0, Chairs: []Chair{}})
 		}
 		c.Logger().Errorf("searchChairs DB execution error : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -169,11 +170,11 @@ func searchChairs(c echo.Context) error {
 
 	res.Chairs = chairs
 
-	return c.JSON(http.StatusOK, res)
+	return NoIndentJSON(c, http.StatusOK, res)
 }
 
 func getChairSearchCondition(c echo.Context) error {
-	return c.JSON(http.StatusOK, chairSearchCondition)
+	return NoIndentJSON(c, http.StatusOK, chairSearchCondition)
 }
 
 func getLowPricedChair(c echo.Context) error {
@@ -183,13 +184,13 @@ func getLowPricedChair(c echo.Context) error {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.Logger().Error("getLowPricedChair not found")
-			return c.JSON(http.StatusOK, ChairListResponse{[]Chair{}})
+			return NoIndentJSON(c, http.StatusOK, ChairListResponse{[]Chair{}})
 		}
 		c.Logger().Errorf("getLowPricedChair DB execution error : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	return c.JSON(http.StatusOK, ChairListResponse{Chairs: chairs})
+	return NoIndentJSON(c, http.StatusOK, ChairListResponse{Chairs: chairs})
 }
 
 // estate ////////////////////////////////////////////
@@ -212,7 +213,7 @@ func getEstateDetail(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	return c.JSON(http.StatusOK, estate)
+	return NoIndentJSON(c, http.StatusOK, estate)
 }
 
 func searchEstates(c echo.Context) error {
@@ -311,7 +312,7 @@ func searchEstates(c echo.Context) error {
 	err = db.Select(&estates, searchQuery+searchCondition+limitOffset, params...)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return c.JSON(http.StatusOK, EstateSearchResponse{Count: 0, Estates: []Estate{}})
+			return NoIndentJSON(c, http.StatusOK, EstateSearchResponse{Count: 0, Estates: []Estate{}})
 		}
 		c.Logger().Errorf("searchEstates DB execution error : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -319,7 +320,7 @@ func searchEstates(c echo.Context) error {
 
 	res.Estates = estates
 
-	return c.JSON(http.StatusOK, res)
+	return NoIndentJSON(c, http.StatusOK, res)
 }
 
 func getLowPricedEstate(c echo.Context) error {
@@ -329,13 +330,13 @@ func getLowPricedEstate(c echo.Context) error {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.Logger().Error("getLowPricedEstate not found")
-			return c.JSON(http.StatusOK, EstateListResponse{[]Estate{}})
+			return NoIndentJSON(c, http.StatusOK, EstateListResponse{[]Estate{}})
 		}
 		c.Logger().Errorf("getLowPricedEstate DB execution error : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	return c.JSON(http.StatusOK, EstateListResponse{Estates: estates})
+	return NoIndentJSON(c, http.StatusOK, EstateListResponse{Estates: estates})
 }
 
 func searchRecommendedEstateWithChair(c echo.Context) error {
@@ -365,15 +366,15 @@ func searchRecommendedEstateWithChair(c echo.Context) error {
 	err = db.Select(&estates, query, w, h, w, d, h, w, h, d, d, w, d, h, Limit)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return c.JSON(http.StatusOK, EstateListResponse{[]Estate{}})
+			return NoIndentJSON(c, http.StatusOK, EstateListResponse{[]Estate{}})
 		}
 		c.Logger().Errorf("Database execution error : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	return c.JSON(http.StatusOK, EstateListResponse{Estates: estates})
+	return NoIndentJSON(c, http.StatusOK, EstateListResponse{Estates: estates})
 }
 
 func getEstateSearchCondition(c echo.Context) error {
-	return c.JSON(http.StatusOK, estateSearchCondition)
+	return NoIndentJSON(c, http.StatusOK, estateSearchCondition)
 }

@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/labstack/echo"
 )
 
 func getEnv(key, defaultValue string) string {
@@ -26,6 +29,15 @@ func getRange(cond RangeCondition, rangeID string) (*Range, error) {
 	}
 
 	return cond.Ranges[RangeIndex], nil
+}
+
+func NoIndentJSON(c echo.Context, code int, i interface{}) (err error) {
+	// header := c.Response().Header()
+	// if header.Get(HeaderContentType) == "" {}
+	enc := json.NewEncoder(c.Response())
+	c.Response().Header().Set("Content-Type", "application/json; charset=UTF-8")
+	c.Response().Status = code
+	return enc.Encode(i)
 }
 
 // Corrdinates /////////////////////////////////////
