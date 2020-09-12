@@ -141,9 +141,11 @@ func postEstate(c echo.Context) error {
 	}
 
 	queryBuilder := &strings.Builder{}
-	rents := make([]int, 0)
+	ws := make([]int64, 0)
+	hs := make([]int64, 0)
+	keys := make([]string, 0)
 	queryBuilder.WriteString("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, geom, rent, door_height, door_width, features, popularity) VALUES ")
-	queryParams := make([]interface{}, 0, len(records) * 14)
+	queryParams := make([]interface{}, 0, len(records)*14)
 	for _, row := range records {
 		queryBuilder.WriteString("(?,?,?,?,?,?,?,ST_GeomFromText(CONCAT('POINT(',?,' ',?,')'), 4326),?,?,?,?,?),")
 
@@ -156,9 +158,11 @@ func postEstate(c echo.Context) error {
 		latitude := rm.NextFloat()
 		longitude := rm.NextFloat()
 		rent := rm.NextInt()
-		rents = append(rents, rent)
 		doorHeight := rm.NextInt()
 		doorWidth := rm.NextInt()
+		ws = append(ws, int64(doorWidth))
+		hs = append(hs, int64(doorHeight))
+		keys = append(keys, RentToId(int64(rent)))
 		features := rm.NextString()
 		popularity := rm.NextInt()
 		if err := rm.Err(); err != nil {
@@ -174,10 +178,13 @@ func postEstate(c echo.Context) error {
 		c.Logger().Errorf("failed to insert estates: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-
-	for _, rent := range rents {
-		key := RentToId(int64(rent))
-		rentCountServer.IncrBy(key, 1)
+	for i, key := range keys {
+		w := SizeToIndex(ws[i])
+		h := SizeToIndex(hs[i])
+		pre := WHCount{}
+		rentCountServer.Get(key, &pre)
+		Update(w, h, &pre, 1)
+		rentCountServer.Set(key, pre)
 	}
 	return c.NoContent(http.StatusCreated)
 }

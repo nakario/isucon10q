@@ -218,7 +218,9 @@ func searchEstates(c echo.Context) error {
 	conditions := make([]string, 0)
 	params := make([]interface{}, 0)
 	rentUsed := false
-	rentKey := ""
+	key := ""
+	w := int64(-1)
+	h := int64(-1)
 	rentOnly := true
 
 	if c.QueryParam("doorHeightRangeId") != "" {
@@ -231,12 +233,12 @@ func searchEstates(c echo.Context) error {
 		if doorHeight.Min != -1 {
 			conditions = append(conditions, "door_height >= ?")
 			params = append(params, doorHeight.Min)
-			rentOnly = false
+			h = SizeToIndex(doorHeight.Min)
 		}
 		if doorHeight.Max != -1 {
 			conditions = append(conditions, "door_height < ?")
 			params = append(params, doorHeight.Max)
-			rentOnly = false
+			h = SizeToIndex(doorHeight.Max - 1)
 		}
 	}
 
@@ -250,12 +252,12 @@ func searchEstates(c echo.Context) error {
 		if doorWidth.Min != -1 {
 			conditions = append(conditions, "door_width >= ?")
 			params = append(params, doorWidth.Min)
-			rentOnly = false
+			w = SizeToIndex(doorWidth.Min)
 		}
 		if doorWidth.Max != -1 {
 			conditions = append(conditions, "door_width < ?")
 			params = append(params, doorWidth.Max)
-			rentOnly = false
+			w = SizeToIndex(doorWidth.Max - 1)
 		}
 	}
 
@@ -269,13 +271,13 @@ func searchEstates(c echo.Context) error {
 		if estateRent.Min != -1 {
 			conditions = append(conditions, "rent >= ?")
 			params = append(params, estateRent.Min)
-			rentKey = RentToId(int64(estateRent.Min))
+			key = RentToId(int64(estateRent.Min))
 			rentUsed = true
 		}
 		if estateRent.Max != -1 {
 			conditions = append(conditions, "rent < ?")
 			params = append(params, estateRent.Max)
-			rentKey = RentToId(int64(estateRent.Max - 1))
+			key = RentToId(int64(estateRent.Max - 1))
 			rentUsed = true
 		}
 	}
@@ -312,7 +314,29 @@ func searchEstates(c echo.Context) error {
 
 	var res EstateSearchResponse
 	if rentOnly && rentUsed {
-		rentCountServer.Get(rentKey, &res.Count)
+		// key := ""
+		// w := int64(-1)
+		// h := int64(-1)
+		whc := WHCount{}
+		rentCountServer.Get(key, &whc)
+		if w == -1 {
+			if h == -1 {
+				res.Count = whc.Count
+			} else { // sum of w
+				res.Count = whc.WH[0][h]
+				res.Count += whc.WH[1][h]
+				res.Count += whc.WH[2][h]
+				res.Count += whc.WH[3][h]
+			}
+		} else if h == -1 {
+			// sum of h
+			res.Count = whc.WH[w][0]
+			res.Count += whc.WH[w][1]
+			res.Count += whc.WH[w][2]
+			res.Count += whc.WH[w][3]
+		} else {
+			res.Count = whc.WH[w][h]
+		}
 	} else {
 		err = db.Get(&res.Count, countQuery+searchCondition, params...)
 		if err != nil {

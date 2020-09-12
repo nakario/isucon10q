@@ -99,17 +99,24 @@ func initialize(c echo.Context) error {
 			panic(err)
 		}
 		// 流石に全部あると仮定
-		localMap := map[string]interface{}{}
+		localMap := map[string]WHCount{}
 		for _, e := range estates {
 			key := RentToId(e.Rent)
-			count, ok := localMap[key]
+			whc, ok := localMap[key]
+			w := SizeToIndex(e.DoorWidth)
+			h := SizeToIndex(e.DoorHeight)
 			if ok {
-				localMap[key] = count.(int) + 1
+				Update(w, h, &whc, 1)
+				localMap[key] = whc
 			} else {
-				localMap[key] = 1
+				whc2 := WHCount{}
+				Update(w, h, &whc2, 1)
+				localMap[key] = whc2
 			}
 		}
-		rentCountServer.MSet(localMap)
+		for k, v := range localMap {
+			rentCountServer.Set(k, v)
+		}
 	}
 	rentCountServer.Initialize()
 

@@ -131,8 +131,29 @@ func (r *RecordMapper) Err() error {
 	return r.err
 }
 
+type WHCount struct {
+	Count int64 // sum of sita
+	WH    [4][4]int64
+}
+
+func Update(w int64, h int64, whc *WHCount, val int64) {
+	whc.Count += val
+	whc.WH[w][h] += val
+}
+func SizeToIndex(size int64) int64 {
+	if size < 80 {
+		return 0
+	}
+	if size < 110 {
+		return 1
+	}
+	if size < 150 {
+		return 2
+	}
+	return 3
+}
+
 func RentToId(rent int64) string {
-	// IncrBy
 	if rent < 50000 {
 		return "0"
 	}
