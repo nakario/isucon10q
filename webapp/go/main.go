@@ -61,7 +61,7 @@ func init() {
 	json.Unmarshal(jsonText, &estateSearchCondition)
 }
 
-func initDBChair(c echo.Context, ch chan error) {
+func initDBChair(c echo.Context, ch chan error, out *bytes.Buffer) {
 	sqlDir := filepath.Join("..", "mysql", "db")
 	p := filepath.Join(sqlDir, "3.chair.sql")
 	sqlFile, _ := filepath.Abs(p)
@@ -74,12 +74,11 @@ func initDBChair(c echo.Context, ch chan error) {
 		sqlFile,
 	)
 	cmd := exec.Command("bash", "-c", cmdStr)
-	var out bytes.Buffer
-	cmd.Stderr = &out
+	cmd.Stderr = out
 	ch <- cmd.Run()
 }
 
-func initDBEstate(c echo.Context, ch chan error) {
+func initDBEstate(c echo.Context, ch chan error, out *bytes.Buffer) {
 	sqlDir := filepath.Join("..", "mysql", "db")
 	p := filepath.Join(sqlDir, "3.estate.sql")
 	sqlFile, _ := filepath.Abs(p)
@@ -92,24 +91,27 @@ func initDBEstate(c echo.Context, ch chan error) {
 		sqlFile,
 	)
 	cmd := exec.Command("bash", "-c", cmdStr)
-	var out bytes.Buffer
-	cmd.Stderr = &out
+	cmd.Stderr = out
 	ch <- cmd.Run()
 }
 
 func initialize(c echo.Context) error {
 	chChair := make(chan error)
-	go initDBChair(c, chChair)
+	bufChair := new(bytes.Buffer)
+	go initDBChair(c, chChair, bufChair)
 	chEstate := make(chan error)
-	go initDBEstate(c, chEstate)
+	bufEstate := new(bytes.Buffer)
+	go initDBEstate(c, chEstate, bufEstate)
 	for i := 0; i < 2; i++ {
 		select {
 		case err := <- chChair:
 			if err != nil {
+				c.Logger().Errorf("chair db error : %v : %v", err, bufChair.String())
 				return c.NoContent(http.StatusInternalServerError)
 			}
 		case err := <- chEstate:
 			if err != nil {
+				c.Logger().Errorf("estate db error : %v : %v", err, bufEstate.String())
 				return c.NoContent(http.StatusInternalServerError)
 			}
 		}
