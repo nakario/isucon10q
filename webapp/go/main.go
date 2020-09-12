@@ -22,14 +22,16 @@ import (
 const Limit = 20
 const NazotteLimit = 50
 
-var db *sqlx.DB
-var mySQLConnectionData *MySQLConnectionEnv
+var db_chair *sqlx.DB
+var db_estate *sqlx.DB
+var mySQLConnectionDataChair *MySQLConnectionEnv
+var mySQLConnectionDataEstate *MySQLConnectionEnv
 var chairSearchCondition ChairSearchCondition
 var estateSearchCondition EstateSearchCondition
 
-func NewMySQLConnectionEnv() *MySQLConnectionEnv {
+func NewMySQLConnectionEnv(host_variable string) *MySQLConnectionEnv {
 	return &MySQLConnectionEnv{
-		Host:     getEnv("MYSQL_HOST", "127.0.0.1"),
+		Host:     getEnv(host_variable, "127.0.0.1"),
 		Port:     getEnv("MYSQL_PORT", "3306"),
 		User:     getEnv("MYSQL_USER", "isucon"),
 		DBName:   getEnv("MYSQL_DBNAME", "isuumo"),
@@ -59,33 +61,47 @@ func init() {
 	json.Unmarshal(jsonText, &estateSearchCondition)
 }
 
-func initialize(c echo.Context) error {
+func initDBChair(c echo.Context, ch chan error) {
 	sqlDir := filepath.Join("..", "mysql", "db")
-	paths := []string{
-		// filepath.Join(sqlDir, "0_Schema.sql"),
-		// filepath.Join(sqlDir, "1_DummyEstateData.sql"),
-		// filepath.Join(sqlDir, "2_DummyChairData.sql"),
-		filepath.Join(sqlDir, "3.sql"),
-	}
+	p := filepath.Join(sqlDir, "3.chair.sql")
+	sqlFile, _ := filepath.Abs(p)
+	cmdStr := fmt.Sprintf("mysql -h %v -u %v -p%v -P %v %v < %v",
+		mySQLConnectionDataChair.Host,
+		mySQLConnectionDataChair.User,
+		mySQLConnectionDataChair.Password,
+		mySQLConnectionDataChair.Port,
+		mySQLConnectionDataChair.DBName,
+		sqlFile,
+	)
+	cmd := exec.Command("bash", "-c", cmdStr)
+	var out bytes.Buffer
+	cmd.Stderr = &out
+	ch <- cmd.Run()
+}
 
-	for _, p := range paths {
-		sqlFile, _ := filepath.Abs(p)
-		cmdStr := fmt.Sprintf("mysql -h %v -u %v -p%v -P %v %v < %v",
-			mySQLConnectionData.Host,
-			mySQLConnectionData.User,
-			mySQLConnectionData.Password,
-			mySQLConnectionData.Port,
-			mySQLConnectionData.DBName,
-			sqlFile,
-		)
-		cmd := exec.Command("bash", "-c", cmdStr)
-		var out bytes.Buffer
-		cmd.Stderr = &out
-		if err := cmd.Run(); err != nil {
-			c.Logger().Errorf("Initialize script error : %v : %v", err, out.String())
-			return c.NoContent(http.StatusInternalServerError)
-		}
-	}
+func initDBEstate(c echo.Context, ch chan error) {
+	sqlDir := filepath.Join("..", "mysql", "db")
+	p := filepath.Join(sqlDir, "3.estate.sql")
+	sqlFile, _ := filepath.Abs(p)
+	cmdStr := fmt.Sprintf("mysql -h %v -u %v -p%v -P %v %v < %v",
+		mySQLConnectionDataEstate.Host,
+		mySQLConnectionDataEstate.User,
+		mySQLConnectionDataEstate.Password,
+		mySQLConnectionDataEstate.Port,
+		mySQLConnectionDataEstate.DBName,
+		sqlFile,
+	)
+	cmd := exec.Command("bash", "-c", cmdStr)
+	var out bytes.Buffer
+	cmd.Stderr = &out
+	ch <- cmd.Run()
+}
+
+func initialize(c echo.Context) error {
+	chChair := make(chan error)
+	go initDBChair(c, chChair)
+	chEstate := make(chan error)
+	go initDBEstate(c, chEstate)
 
 	return c.JSON(http.StatusOK, InitializeResponse{
 		Language: "go",
@@ -124,15 +140,23 @@ func main() {
 	e.GET("/api/estate/search/condition", getEstateSearchCondition)
 	e.GET("/api/recommended_estate/:id", searchRecommendedEstateWithChair)
 
-	mySQLConnectionData = NewMySQLConnectionEnv()
+	mySQLConnectionDataChair = NewMySQLConnectionEnv("MYSQL_HOST_CHAIR")
+	mySQLConnectionDataEstate = NewMySQLConnectionEnv("MYSQL_HOST_Estate")
 
 	var err error
-	db, err = mySQLConnectionData.ConnectDB()
+	db_chair, err = mySQLConnectionDataChair.ConnectDB()
 	if err != nil {
-		e.Logger.Fatalf("DB connection failed : %v", err)
+		e.Logger.Fatalf("DB(chair) connection failed : %v", err)
 	}
-	db.SetMaxOpenConns(10)
-	defer db.Close()
+	db_chair.SetMaxOpenConns(10)
+	defer db_chair.Close()
+
+	db_estate, err = mySQLConnectionDataEstate.ConnectDB()
+	if err != nil {
+		e.Logger.Fatalf("DB(estate) connection failed : %v", err)
+	}
+	db_estate.SetMaxOpenConns(10)
+	defer db_estate.Close()
 
 	// Start server
 	serverPort := fmt.Sprintf(":%v", getEnv("SERVER_PORT", "1323"))
