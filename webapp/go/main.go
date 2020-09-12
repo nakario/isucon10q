@@ -82,6 +82,7 @@ func initialize(c echo.Context) error {
 		}
 	}
 	rows, err := db.Query("select id, latitude, longitude")
+	defer rows.Close()
 	for rows.Next() {
 		var id int
 		var lat float64
@@ -95,6 +96,9 @@ func initialize(c echo.Context) error {
 			c.Logger().Errorf("Initialize script error : %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
+	}
+	if err = rows.Err(); err != nil {
+		c.Logger().Errorf("db rows error : %v", err)
 	}
 
 	return c.JSON(http.StatusOK, InitializeResponse{
