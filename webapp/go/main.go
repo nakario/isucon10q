@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	log2 "log"
 	"net/http"
-	_ "net/http/pprof"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -123,7 +121,6 @@ func initialize(c echo.Context) error {
 }
 
 func main() {
-	go func() { log2.Println(http.ListenAndServe(":9876", nil)) }()
 	// Echo instance
 	e := echo.New()
 	e.Debug = true
