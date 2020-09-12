@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -61,9 +62,10 @@ func init() {
 func initialize(c echo.Context) error {
 	sqlDir := filepath.Join("..", "mysql", "db")
 	paths := []string{
-		filepath.Join(sqlDir, "0_Schema.sql"),
-		filepath.Join(sqlDir, "1_DummyEstateData.sql"),
-		filepath.Join(sqlDir, "2_DummyChairData.sql"),
+		// filepath.Join(sqlDir, "0_Schema.sql"),
+		// filepath.Join(sqlDir, "1_DummyEstateData.sql"),
+		// filepath.Join(sqlDir, "2_DummyChairData.sql"),
+		filepath.Join(sqlDir, "3.sql"),
 	}
 
 	for _, p := range paths {
@@ -76,8 +78,11 @@ func initialize(c echo.Context) error {
 			mySQLConnectionData.DBName,
 			sqlFile,
 		)
-		if err := exec.Command("bash", "-c", cmdStr).Run(); err != nil {
-			c.Logger().Errorf("Initialize script error : %v", err)
+		cmd := exec.Command("bash", "-c", cmdStr)
+		var out bytes.Buffer
+		cmd.Stderr = &out
+		if err := cmd.Run(); err != nil {
+			c.Logger().Errorf("Initialize script error : %v : %v", err, out.String())
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	}
