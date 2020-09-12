@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -33,8 +32,7 @@ func getChairDetail(c echo.Context) error {
 		c.Echo().Logger.Infof("requested id's chair is sold out : %v", id)
 		return c.NoContent(http.StatusNotFound)
 	}
-	chairjson, err := json.Marshal(chair)
-	return NoIndentJSON(c, http.StatusOK, chairjson)
+	return NoIndentJSON(c, http.StatusOK, chair)
 }
 
 func searchChairs(c echo.Context) error {
