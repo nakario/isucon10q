@@ -81,6 +81,21 @@ func initialize(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	}
+	rows, err := db.Query("select id, latitude, longitude")
+	for rows.Next() {
+		var id int
+		var lat float64
+		var lon float64
+		if err := rows.Scan(&id, &lat, &lon); err != nil {
+			c.Logger().Errorf("db scan error : %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+		_, err = db.Exec("UPDATE estate SET geom = ST_GeomFromText(CONCAT(POINT(?,?)), 4326) WHERE id = ?", lat, lon, id)
+		if err != nil {
+			c.Logger().Errorf("Initialize script error : %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+	}
 
 	return c.JSON(http.StatusOK, InitializeResponse{
 		Language: "go",

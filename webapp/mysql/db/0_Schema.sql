@@ -13,7 +13,7 @@ CREATE TABLE isuumo.estate
     address     VARCHAR(128)        NOT NULL,
     latitude    DOUBLE PRECISION    NOT NULL,
     longitude   DOUBLE PRECISION    NOT NULL,
-    geom        GEOMETRY            NOT NULL SRID 4326,
+    geom        GEOMETRY            SRID 4326,
     rent        INTEGER             NOT NULL,
     door_height INTEGER             NOT NULL,
     door_width  INTEGER             NOT NULL,
@@ -44,4 +44,3 @@ alter table isuumo.estate add index id_rent_id (rent, id);
 alter table isuumo.estate add index id_popularity_id (popularity desc, id asc);
 alter table isuumo.estate add index id_door_height (door_height);
 alter table isuumo.estate add index id_door_width (door_width);
-alter table isuumo.estate add spatial index id_geom (geom);
