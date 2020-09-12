@@ -81,7 +81,7 @@ func initialize(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	}
-	rows, err := db.Query("select id, latitude, longitude")
+	rows, err := db.Query("select id, latitude, longitude from estate")
 	defer rows.Close()
 	for rows.Next() {
 		var id int
