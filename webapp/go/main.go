@@ -87,6 +87,7 @@ func initialize(c echo.Context) error {
 
 	rentCountServer.server.InitializeFunction = func() {
 		// log.Println("rentCountServer init")
+		rentCountServer.FlushAll()
 		estates := make([]Estate, 0)
 		err := db.Select(&estates, "SELECT * FROM `estate`")
 		if err != nil {
@@ -105,6 +106,7 @@ func initialize(c echo.Context) error {
 		}
 		rentCountServer.MSet(localMap)
 	}
+	rentCountServer.Initialize()
 
 	return c.JSON(http.StatusOK, InitializeResponse{
 		Language: "go",
