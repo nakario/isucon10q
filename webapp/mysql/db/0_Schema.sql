@@ -36,3 +36,7 @@ CREATE TABLE isuumo.chair
     popularity  INTEGER         NOT NULL,
     stock       INTEGER         NOT NULL
 );
+
+ALTER TABLE isuumo.chair add index id_price_id (price, id);
+alter table isuumo.estate add index id_rent_id (rent, id);
+
