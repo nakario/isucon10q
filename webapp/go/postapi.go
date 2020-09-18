@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -31,10 +32,9 @@ func postChair(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-
 	queryBuilder := &strings.Builder{}
 	queryBuilder.WriteString("INSERT INTO chair(id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock) VALUES ")
-	queryParams := make([]interface{}, 0, len(records) * 13)
+	queryParams := make([]interface{}, 0, len(records)*13)
 	for _, row := range records {
 		queryBuilder.WriteString("(?,?,?,?,?,?,?,?,?,?,?,?,?),")
 
@@ -141,10 +141,9 @@ func postEstate(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-
 	queryBuilder := &strings.Builder{}
 	queryBuilder.WriteString("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, geom, rent, door_height, door_width, features, popularity) VALUES ")
-	queryParams := make([]interface{}, 0, len(records) * 14)
+	queryParams := make([]interface{}, 0, len(records)*14)
 	for _, row := range records {
 		queryBuilder.WriteString("(?,?,?,?,?,?,?,ST_GeomFromText(CONCAT('POINT(',?,' ',?,')'), 4326),?,?,?,?,?),")
 
@@ -223,7 +222,7 @@ func searchEstateNazotte(c echo.Context) error {
 	}
 
 	estatesInBoundingBox := []Estate{}
-	query := fmt.Sprintf(`SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate WHERE ST_Contains(ST_PolygonFromText(%s, 4326), geom) ORDER BY popularity DESC, id ASC`, coordinates.coordinatesToText())
+	query := fmt.Sprintf(`SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate WHERE ST_Contains(ST_PolygonFromText(%s, 4326), geom)`, coordinates.coordinatesToText())
 	err = db_estate.Select(&estatesInBoundingBox, query)
 	if err == sql.ErrNoRows {
 		c.Echo().Logger.Infof("select * from estate where ST_Contains ...", err)
@@ -232,6 +231,8 @@ func searchEstateNazotte(c echo.Context) error {
 		c.Echo().Logger.Errorf("database execution error : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+
+	sort.SliceStable(estatesInBoundingBox, func(i, j int) bool { return estatesInBoundingBox[i].Popularity > estatesInBoundingBox[j].Popularity })
 
 	estatesInPolygon := estatesInBoundingBox
 
