@@ -105,12 +105,12 @@ func initialize(c echo.Context) error {
 	go initDBEstate(c, chEstate, bufEstate)
 	for i := 0; i < 2; i++ {
 		select {
-		case err := <- chChair:
+		case err := <-chChair:
 			if err != nil {
 				c.Logger().Errorf("chair db error : %v : %v", err, bufChair.String())
 				return c.NoContent(http.StatusInternalServerError)
 			}
-		case err := <- chEstate:
+		case err := <-chEstate:
 			if err != nil {
 				c.Logger().Errorf("estate db error : %v : %v", err, bufEstate.String())
 				return c.NoContent(http.StatusInternalServerError)
@@ -194,7 +194,7 @@ func main() {
 	if err != nil {
 		e.Logger.Fatalf("DB(chair) connection failed : %v", err)
 	}
-	db_chair.SetMaxOpenConns(10)
+	db_chair.SetMaxOpenConns(20)
 	defer db_chair.Close()
 
 	db_estate, err = mySQLConnectionDataEstate.ConnectDB()
