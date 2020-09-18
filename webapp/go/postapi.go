@@ -233,7 +233,14 @@ func searchEstateNazotte(c echo.Context) error {
 	}
 	fmt.Println(estatesInBoundingBox[0])
 
-	sort.SliceStable(estatesInBoundingBox, func(i, j int) bool { return estatesInBoundingBox[i].Popularity > estatesInBoundingBox[j].Popularity })
+	sort.SliceStable(estatesInBoundingBox, func(i, j int) bool {
+		if estatesInBoundingBox[i].Popularity > estatesInBoundingBox[j].Popularity {
+			return true
+		} else if estatesInBoundingBox[i].ID < estatesInBoundingBox[j].ID {
+			return true
+		}
+		return false
+	})
 
 	fmt.Println(estatesInBoundingBox[0])
 	estatesInPolygon := estatesInBoundingBox
