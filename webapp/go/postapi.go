@@ -231,9 +231,11 @@ func searchEstateNazotte(c echo.Context) error {
 		c.Echo().Logger.Errorf("database execution error : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+	fmt.Println(estatesInBoundingBox[0])
 
 	sort.SliceStable(estatesInBoundingBox, func(i, j int) bool { return estatesInBoundingBox[i].Popularity > estatesInBoundingBox[j].Popularity })
 
+	fmt.Println(estatesInBoundingBox[0])
 	estatesInPolygon := estatesInBoundingBox
 
 	var re EstateSearchResponse
