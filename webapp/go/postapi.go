@@ -224,7 +224,7 @@ func searchEstateNazotte(c echo.Context) error {
 	estatesInBoundingBox := []Estate{}
 	query := fmt.Sprintf(`SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate WHERE ST_Contains(ST_PolygonFromText(%s, 4326), geom)`, coordinates.coordinatesToText())
 	err = db_estate.Select(&estatesInBoundingBox, query)
-	if err == sql.ErrNoRows {
+	if err == sql.ErrNoRows || len(estatesInBoundingBox) == 0 {
 		c.Echo().Logger.Infof("select * from estate where ST_Contains ...", err)
 		return NoIndentJSON(c, http.StatusOK, EstateSearchResponse{Count: 0, Estates: []Estate{}})
 	} else if err != nil {
