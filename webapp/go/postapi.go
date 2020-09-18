@@ -236,7 +236,11 @@ func searchEstateNazotte(c echo.Context) error {
 	sort.SliceStable(estatesInBoundingBox, func(i, j int) bool {
 		if estatesInBoundingBox[i].Popularity > estatesInBoundingBox[j].Popularity {
 			return true
-		} else if estatesInBoundingBox[i].ID < estatesInBoundingBox[j].ID {
+		}
+		if estatesInBoundingBox[i].Popularity < estatesInBoundingBox[j].Popularity {
+			return false
+		}
+		if estatesInBoundingBox[i].ID < estatesInBoundingBox[j].ID {
 			return true
 		}
 		return false
