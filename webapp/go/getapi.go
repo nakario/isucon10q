@@ -330,7 +330,7 @@ func searchEstates(c echo.Context) error {
 }
 
 func getLowPricedEstate(c echo.Context) error {
-	estates := make([]Estate, 0, Limit)
+	estates := make([]Estate, Limit)
 	gots := byRentEState.GetByRankRange(int(1), int(Limit), false)
 	for i, got := range gots {
 		estates[i] = got.Value.(Estate)
