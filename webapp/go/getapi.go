@@ -17,21 +17,12 @@ func getChairDetail(c echo.Context) error {
 		c.Echo().Logger.Errorf("Request parameter \"id\" parse error : %v", err)
 		return c.NoContent(http.StatusBadRequest)
 	}
-
-	chair := Chair{}
-	query := `SELECT * FROM chair WHERE id = ?`
-	err = db_chair.Get(&chair, query, id)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			c.Echo().Logger.Infof("requested id's chair not found : %v", id)
-			return c.NoContent(http.StatusNotFound)
-		}
-		c.Echo().Logger.Errorf("Failed to get the chair from id : %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	} else if chair.Stock <= 0 {
-		c.Echo().Logger.Infof("requested id's chair is sold out : %v", id)
+	result := GetChair(int64(id))
+	if result == nil {
+		c.Echo().Logger.Infof("requested id's chair not found : %v", id)
 		return c.NoContent(http.StatusNotFound)
 	}
+	chair := result.Value.(Chair)
 	return NoIndentJSON(c, http.StatusOK, chair)
 }
 

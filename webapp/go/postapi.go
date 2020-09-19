@@ -123,6 +123,7 @@ func buyChair(c echo.Context) error {
 		c.Echo().Logger.Errorf("transaction commit error : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+	chair.Stock--
 	AddToChairSet(chair)
 	return c.NoContent(http.StatusOK)
 }
