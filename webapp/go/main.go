@@ -116,6 +116,7 @@ func initialize(c echo.Context) error {
 	}
 
 	ResetEstateSet()
+	ResetChairSet()
 
 	return c.JSON(http.StatusOK, InitializeResponse{
 		Language: "go",
