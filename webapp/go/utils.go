@@ -32,8 +32,6 @@ func getRange(cond RangeCondition, rangeID string) (*Range, error) {
 }
 
 func NoIndentJSON(c echo.Context, code int, i interface{}) (err error) {
-	// header := c.Response().Header()
-	// if header.Get(HeaderContentType) == "" {}
 	enc := json.NewEncoder(c.Response())
 	c.Response().Header().Set("Content-Type", "application/json; charset=UTF-8")
 	c.Response().Status = code

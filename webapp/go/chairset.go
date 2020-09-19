@@ -23,7 +23,7 @@ func AddToChairSet(chair Chair) {
 
 func ResetChairSet() {
 	chairs := make([]Chair, 0)
-	err := db_estate.Select(&chairs, "SELECT * FROM `chair`")
+	err := db_chair.Select(&chairs, "SELECT * FROM `chair`")
 	if err != nil {
 		panic(err)
 	}
