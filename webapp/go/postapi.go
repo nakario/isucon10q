@@ -34,9 +34,9 @@ func postChair(c echo.Context) error {
 	queryBuilder := &strings.Builder{}
 	queryBuilder.WriteString("INSERT INTO chair(id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock) VALUES ")
 	queryParams := make([]interface{}, 0, len(records)*13)
+	chairs := make([]Chair, 0)
 	for _, row := range records {
 		queryBuilder.WriteString("(?,?,?,?,?,?,?,?,?,?,?,?,?),")
-
 		rm := RecordMapper{Record: row}
 		id := rm.NextInt()
 		name := rm.NextString()
@@ -55,6 +55,12 @@ func postChair(c echo.Context) error {
 			c.Logger().Errorf("failed to read record: %v", err)
 			return c.NoContent(http.StatusBadRequest)
 		}
+		chair := Chair{
+			int64(id), name, description, thumbnail,
+			int64(price), int64(height), int64(width), int64(depth),
+			color, features, kind, int64(popularity), int64(stock),
+		}
+		chairs = append(chairs, chair)
 		queryParams = append(queryParams, id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock)
 	}
 
@@ -64,7 +70,9 @@ func postChair(c echo.Context) error {
 		c.Logger().Errorf("failed to insert chairs: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-
+	for _, chair := range chairs {
+		AddToChairSet(chair)
+	}
 	return c.NoContent(http.StatusCreated)
 }
 
@@ -110,13 +118,12 @@ func buyChair(c echo.Context) error {
 		c.Echo().Logger.Errorf("chair stock update failed : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-
 	err = tx.Commit()
 	if err != nil {
 		c.Echo().Logger.Errorf("transaction commit error : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-
+	AddToChairSet(chair)
 	return c.NoContent(http.StatusOK)
 }
 

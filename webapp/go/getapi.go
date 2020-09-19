@@ -176,22 +176,24 @@ func getChairSearchCondition(c echo.Context) error {
 }
 
 func getLowPricedChair(c echo.Context) error {
-	var chairs []Chair
-	query := `SELECT * FROM chair WHERE stock > 0 ORDER BY price ASC, id ASC LIMIT ?`
-	err := db_chair.Select(&chairs, query, Limit)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			c.Logger().Error("getLowPricedChair not found")
-			return NoIndentJSON(c, http.StatusOK, ChairListResponse{[]Chair{}})
-		}
-		c.Logger().Errorf("getLowPricedChair DB execution error : %v", err)
-		return c.NoContent(http.StatusInternalServerError)
+	chairs := make([]Chair, Limit)
+	gots := byPriceChair.GetByRankRange(int(1), int(Limit), false)
+	for i, got := range gots {
+		chairs[i] = got.Value.(Chair)
 	}
-
 	return NoIndentJSON(c, http.StatusOK, ChairListResponse{Chairs: chairs})
 }
 
 // estate ////////////////////////////////////////////
+
+func getLowPricedEstate(c echo.Context) error {
+	estates := make([]Estate, Limit)
+	gots := byRentEState.GetByRankRange(int(1), int(Limit), false)
+	for i, got := range gots {
+		estates[i] = got.Value.(Estate)
+	}
+	return NoIndentJSON(c, http.StatusOK, EstateListResponse{Estates: estates})
+}
 
 func getEstateDetail(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -327,15 +329,6 @@ func searchEstates(c echo.Context) error {
 	}
 
 	return NoIndentJSON(c, http.StatusOK, res)
-}
-
-func getLowPricedEstate(c echo.Context) error {
-	estates := make([]Estate, Limit)
-	gots := byRentEState.GetByRankRange(int(1), int(Limit), false)
-	for i, got := range gots {
-		estates[i] = got.Value.(Estate)
-	}
-	return NoIndentJSON(c, http.StatusOK, EstateListResponse{Estates: estates})
 }
 
 func searchRecommendedEstateWithChair(c echo.Context) error {

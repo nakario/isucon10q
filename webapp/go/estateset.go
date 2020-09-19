@@ -44,7 +44,6 @@ func AddToEstateSet(estate Estate) {
 	w := SizeToIndex(estate.DoorWidth)
 	h := SizeToIndex(estate.DoorHeight)
 	key := strconv.Itoa(int(estate.ID))
-	// todo lock
 	estatelock.Lock()
 	defer estatelock.Unlock()
 	for _, ri := range []int64{r, 4} {
