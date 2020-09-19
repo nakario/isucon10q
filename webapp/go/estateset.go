@@ -57,7 +57,7 @@ func AddToEstateSet(estate Estate) {
 	byRentEState.AddOrUpdate(key, rentScore, estate)
 }
 func GetEstate(id int64) *sortedset.SortedSetNode {
-	return estateSet[4][4][4].GetByKey(strconv.Itoa(int(id)))
+	return byRentEState.GetByKey(strconv.Itoa(int(id)))
 }
 
 func GetEstateSetCount(rent int64, width int64, height int64) int64 {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"strconv"
 	"sync"
 
@@ -125,14 +126,21 @@ func QueryChairSet(
 		}
 	}
 	result := make([]Chair, 0)
-	gots := chairSet[h][w][d][p][c][k].GetByRankRange(int(-1-offset), int(-1-offset-limit), false)
-	for _, got := range gots {
-		if got == nil {
+	ids := chairSet[h][w][d][p][c][k].GetByRankRange(int(-1-offset), int(-1-offset-limit), false)
+	for _, id := range ids {
+		if id == nil {
 			continue
 		}
-		result = append(result, got.Value.(Chair))
+		chair := GetChair(id.Value.(int64))
+		if chair == nil {
+			continue
+		}
+		result = append(result, chair.Value.(Chair))
 	}
 	return result
+}
+func GetChair(id int64) *sortedset.SortedSetNode {
+	return byPriceChair.GetByKey(strconv.Itoa(int(id)))
 }
 
 func AddToChairSet(chair Chair) bool {
@@ -145,7 +153,7 @@ func AddToChairSet(chair Chair) bool {
 	k := KindToIndex(chair.Kind)
 	key := strconv.Itoa(int(chair.ID))
 	if c < 0 || k < 0 {
-		return false
+		log.Printf("Invalid chair!!")
 	}
 	chairlock.Lock()
 	defer chairlock.Unlock()
@@ -158,7 +166,7 @@ func AddToChairSet(chair Chair) bool {
 							if chair.Stock == 0 {
 								chairSet[hi][wi][di][pi][ci][ki].Remove(key)
 							} else {
-								chairSet[hi][wi][di][pi][ci][ki].AddOrUpdate(key, score, chair)
+								chairSet[hi][wi][di][pi][ci][ki].AddOrUpdate(key, score, chair.ID)
 							}
 						}
 					}
