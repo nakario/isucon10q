@@ -11,6 +11,19 @@ import (
 var estateSet [][][](*sortedset.SortedSet)
 var estatelock sync.Mutex
 
+func SizeToIndex(size int64) int64 {
+	if size < 80 {
+		return 0
+	}
+	if size < 110 {
+		return 1
+	}
+	if size < 150 {
+		return 2
+	}
+	return 3
+}
+
 func RentToIndex(rent int64) int64 {
 	if rent < 50000 {
 		return 0
@@ -23,6 +36,7 @@ func RentToIndex(rent int64) int64 {
 	}
 	return 3
 }
+
 func AddToEstateSet(estate Estate) {
 	score := sortedset.SCORE(estate.Popularity*100000 - estate.ID)
 	r := RentToIndex(estate.Rent)
