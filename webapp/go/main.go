@@ -163,14 +163,14 @@ func main() {
 	if err != nil {
 		e.Logger.Fatalf("DB(chair) connection failed : %v", err)
 	}
-	db_chair.SetMaxOpenConns(10)
+	db_chair.SetMaxOpenConns(1000)
 	defer db_chair.Close()
 
 	db_estate, err = mySQLConnectionDataEstate.ConnectDB()
 	if err != nil {
 		e.Logger.Fatalf("DB(estate) connection failed : %v", err)
 	}
-	db_estate.SetMaxOpenConns(10)
+	db_estate.SetMaxOpenConns(1000)
 	defer db_estate.Close()
 	ResetEstateSet()
 	// Start server

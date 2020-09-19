@@ -206,18 +206,12 @@ func postEstateRequestDocument(c echo.Context) error {
 		c.Echo().Logger.Infof("post request document failed : %v", err)
 		return c.NoContent(http.StatusBadRequest)
 	}
-
-	estate := Estate{}
-	query := `SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate WHERE id = ?`
-	err = db_estate.Get(&estate, query, id)
-	if err != nil {
+	got := GetEstate(int64(id))
+	if got == nil {
 		if err == sql.ErrNoRows {
 			return c.NoContent(http.StatusNotFound)
 		}
-		c.Logger().Errorf("postEstateRequestDocument DB execution error : %v", err)
-		return c.NoContent(http.StatusInternalServerError)
 	}
-
 	return c.NoContent(http.StatusOK)
 }
 
