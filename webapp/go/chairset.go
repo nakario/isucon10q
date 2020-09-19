@@ -90,6 +90,40 @@ func KindToIndex(kind string) int64 {
 
 // key: height(4+1), width(4+1), depth(4+1)
 //      price(6+1), color(12+1), kind(4+1)
+func GetChairSetCount(height int64, width int64, depth int64, price int64,
+	color string, colorIsAll bool, kind string, kindIsAll bool) int64 {
+	h := int64(4)
+	w := int64(4)
+	d := int64(4)
+	p := int64(6)
+	c := int64(12)
+	k := int64(4)
+	if height >= 0 {
+		h = SizeToIndex(height)
+	}
+	if width >= 0 {
+		w = SizeToIndex(width)
+	}
+	if depth >= 0 {
+		d = SizeToIndex(depth)
+	}
+	if price >= 0 {
+		p = PriceToIndex(price)
+	}
+	if !colorIsAll {
+		c = ColorToIndex(color)
+		if c < 0 {
+			return 0
+		}
+	}
+	if !kindIsAll {
+		k = KindToIndex(kind)
+		if k < 0 {
+			return 0
+		}
+	}
+	return int64(chairSet[h][w][d][p][c][k].GetCount())
+}
 
 func QueryChairSet(
 	height int64, width int64, depth int64, price int64,
