@@ -49,7 +49,7 @@ func AddToEstateSet(estate Estate) {
 	for _, ri := range []int64{r, 4} {
 		for _, wi := range []int64{w, 4} {
 			for _, hi := range []int64{h, 4} {
-				estateSet[ri][wi][hi].AddOrUpdate(key, score, estate)
+				estateSet[ri][wi][hi].AddOrUpdate(key, score, estate.ID)
 			}
 		}
 	}
@@ -90,12 +90,16 @@ func QueryEstateSet(rent int64, width int64, height int64, limit int64, offset i
 		h = SizeToIndex(height)
 	}
 	result := make([]Estate, 0)
-	gots := estateSet[r][w][h].GetByRankRange(int(-1-offset), int(-1-offset-limit), false)
-	for _, got := range gots {
-		if got == nil {
+	ids := estateSet[r][w][h].GetByRankRange(int(-1-offset), int(-1-offset-limit), false)
+	for _, id := range ids {
+		if ids == nil {
 			continue
 		}
-		result = append(result, got.Value.(Estate))
+		estate := GetEstate(id.Value.(int64))
+		if estate == nil {
+			continue
+		}
+		result = append(result, estate.Value.(Estate))
 	}
 	return result
 }
