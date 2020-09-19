@@ -10,6 +10,7 @@ import (
 // key:
 var estateSet [][][](*sortedset.SortedSet)
 var estatelock sync.Mutex
+var byRentEState *sortedset.SortedSet
 
 func SizeToIndex(size int64) int64 {
 	if size < 80 {
@@ -53,6 +54,8 @@ func AddToEstateSet(estate Estate) {
 			}
 		}
 	}
+	rentScore := sortedset.SCORE(estate.Rent*100000 + estate.ID)
+	byRentEState.AddOrUpdate(key, rentScore, estate)
 }
 func GetEstate(id int64) *sortedset.SortedSetNode {
 	return estateSet[4][4][4].GetByKey(strconv.Itoa(int(id)))
@@ -114,6 +117,7 @@ func ResetEstateSet() {
 	if err != nil {
 		panic(err)
 	}
+	byRentEState = sortedset.New()
 	for _, estate := range estates {
 		AddToEstateSet(estate)
 	}

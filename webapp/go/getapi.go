@@ -331,17 +331,10 @@ func searchEstates(c echo.Context) error {
 
 func getLowPricedEstate(c echo.Context) error {
 	estates := make([]Estate, 0, Limit)
-	query := `SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate ORDER BY rent ASC, id ASC LIMIT ?`
-	err := db_estate.Select(&estates, query, Limit)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			c.Logger().Error("getLowPricedEstate not found")
-			return NoIndentJSON(c, http.StatusOK, EstateListResponse{[]Estate{}})
-		}
-		c.Logger().Errorf("getLowPricedEstate DB execution error : %v", err)
-		return c.NoContent(http.StatusInternalServerError)
+	gots := byRentEState.GetByRankRange(int(1), int(Limit), false)
+	for i, got := range gots {
+		estates[i] = got.Value.(Estate)
 	}
-
 	return NoIndentJSON(c, http.StatusOK, EstateListResponse{Estates: estates})
 }
 
