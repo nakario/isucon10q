@@ -7,7 +7,7 @@ import (
 	"github.com/wangjia184/sortedset"
 )
 
-// key:
+// key: rent(4+1) width(4+1) height(4+1)
 var estateSet [][][](*sortedset.SortedSet)
 var estatelock sync.Mutex
 var byRentEState *sortedset.SortedSet
