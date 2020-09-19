@@ -140,6 +140,7 @@ func Update(w int64, h int64, whc *WHCount, val int64) {
 	whc.Count += val
 	whc.WH[w][h] += val
 }
+
 func SizeToIndex(size int64) int64 {
 	if size < 80 {
 		return 0

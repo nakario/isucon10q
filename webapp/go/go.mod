@@ -13,6 +13,7 @@ require (
 	github.com/shamaton/msgpack v1.1.1
 	github.com/stretchr/testify v1.5.1
 	github.com/valyala/fasttemplate v1.1.0 // indirect
+	github.com/wangjia184/sortedset v0.0.0-20200422044937-080872f546ba
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 // indirect
 	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2 // indirect
 	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299 // indirect

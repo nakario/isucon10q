@@ -19,9 +19,6 @@ import (
 
 const Limit = 20
 const NazotteLimit = 50
-const RedisHostPrivateIPAddress = "10.162.10.103" // ここで指定したサーバーに(Redis /SyncMapServerを) 建てる
-var isMasterServerIP = MyServerIsOnMasterServerIP()
-var rentCountServer = NewSyncMapServerConn(GetMasterServerAddress()+":8884", isMasterServerIP)
 
 var db_chair *sqlx.DB
 var db_estate *sqlx.DB
@@ -105,12 +102,12 @@ func initialize(c echo.Context) error {
 	go initDBEstate(c, chEstate, bufEstate)
 	for i := 0; i < 2; i++ {
 		select {
-		case err := <- chChair:
+		case err := <-chChair:
 			if err != nil {
 				c.Logger().Errorf("chair db error : %v : %v", err, bufChair.String())
 				return c.NoContent(http.StatusInternalServerError)
 			}
-		case err := <- chEstate:
+		case err := <-chEstate:
 			if err != nil {
 				c.Logger().Errorf("estate db error : %v : %v", err, bufEstate.String())
 				return c.NoContent(http.StatusInternalServerError)
@@ -118,35 +115,7 @@ func initialize(c echo.Context) error {
 		}
 	}
 
-	rentCountServer.server.InitializeFunction = func() {
-		// log.Println("rentCountServer init")
-		rentCountServer.FlushAll()
-		estates := make([]Estate, 0)
-		err := db_estate.Select(&estates, "SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM `estate`")
-		if err != nil {
-			panic(err)
-		}
-		// 流石に全部あると仮定
-		localMap := map[string]WHCount{}
-		for _, e := range estates {
-			key := RentToId(e.Rent)
-			whc, ok := localMap[key]
-			w := SizeToIndex(e.DoorWidth)
-			h := SizeToIndex(e.DoorHeight)
-			if ok {
-				Update(w, h, &whc, 1)
-				localMap[key] = whc
-			} else {
-				whc2 := WHCount{}
-				Update(w, h, &whc2, 1)
-				localMap[key] = whc2
-			}
-		}
-		for k, v := range localMap {
-			rentCountServer.Set(k, v)
-		}
-	}
-	rentCountServer.Initialize()
+	ResetEstateSet()
 
 	return c.JSON(http.StatusOK, InitializeResponse{
 		Language: "go",
@@ -203,7 +172,7 @@ func main() {
 	}
 	db_estate.SetMaxOpenConns(10)
 	defer db_estate.Close()
-
+	ResetEstateSet()
 	// Start server
 	serverPort := fmt.Sprintf(":%v", getEnv("SERVER_PORT", "1323"))
 	e.Logger.Fatal(e.Start(serverPort))

@@ -17,6 +17,8 @@ import (
 	"github.com/shamaton/msgpack"
 )
 
+const RedisHostPrivateIPAddress = "127.0.0.1"
+
 // 同時にリクエストされるGoroutine の数がこれに比べて多いと性能が落ちる。
 // かといってものすごい多いと peer する. 16 ~ 100 くらいが安定か？アクセス過多な場合は仕方ない。
 const maxSyncMapServerConnectionNum = 50
