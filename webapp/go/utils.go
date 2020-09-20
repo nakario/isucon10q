@@ -7,11 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	// jsoniter "github.com/json-iterator/go"
 	"github.com/labstack/echo"
 )
-
-// var jsoncsl = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func getEnv(key, defaultValue string) string {
 	val := os.Getenv(key)
@@ -39,6 +36,13 @@ func NoIndentJSON(c echo.Context, code int, i interface{}) (err error) {
 	c.Response().Header().Set("Content-Type", "application/json; charset=UTF-8")
 	c.Response().Status = code
 	return enc.Encode(i)
+}
+
+func RespondEasyJson(c echo.Context, code int, bytes []byte) (err error) {
+	c.Response().Header().Set("Content-Type", "application/json; charset=UTF-8")
+	c.Response().Status = code
+	c.Response().Write(bytes)
+	return nil
 }
 
 // Corrdinates /////////////////////////////////////

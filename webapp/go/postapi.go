@@ -256,6 +256,6 @@ func searchEstateNazotte(c echo.Context) error {
 		re.Estates = estatesInPolygon
 	}
 	re.Count = int64(len(re.Estates))
-
-	return NoIndentJSON(c, http.StatusOK, re)
+	bytes, _ := re.MarshalJSON()
+	return RespondEasyJson(c, http.StatusOK, bytes)
 }
