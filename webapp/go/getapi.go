@@ -185,8 +185,8 @@ func searchChairs(c echo.Context) error {
 		}
 		res.Chairs = chairs
 	}
-
-	return NoIndentJSON(c, http.StatusOK, res)
+	bytes, _ := res.MarshalJSON()
+	return RespondEasyJson(c, http.StatusOK, bytes)
 }
 
 func getChairSearchCondition(c echo.Context) error {
@@ -199,7 +199,8 @@ func getLowPricedChair(c echo.Context) error {
 	for i, got := range gots {
 		chairs[i] = got.Value.(Chair)
 	}
-	return NoIndentJSON(c, http.StatusOK, ChairListResponse{Chairs: chairs})
+	bytes, _ := ChairListResponse{Chairs: chairs}.MarshalJSON()
+	return RespondEasyJson(c, http.StatusOK, bytes)
 }
 
 // estate ////////////////////////////////////////////
@@ -210,7 +211,8 @@ func getLowPricedEstate(c echo.Context) error {
 	for i, got := range gots {
 		estates[i] = got.Value.(Estate)
 	}
-	return NoIndentJSON(c, http.StatusOK, EstateListResponse{Estates: estates})
+	bytes, _ := EstateListResponse{Estates: estates}.MarshalJSON()
+	return RespondEasyJson(c, http.StatusOK, bytes)
 }
 
 func getEstateDetail(c echo.Context) error {
@@ -345,8 +347,8 @@ func searchEstates(c echo.Context) error {
 		}
 		res.Estates = estates
 	}
-
-	return NoIndentJSON(c, http.StatusOK, res)
+	bytes, _ := res.MarshalJSON()
+	return RespondEasyJson(c, http.StatusOK, bytes)
 }
 
 func searchRecommendedEstateWithChair(c echo.Context) error {
@@ -381,8 +383,8 @@ func searchRecommendedEstateWithChair(c echo.Context) error {
 		c.Logger().Errorf("Database execution error : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-
-	return NoIndentJSON(c, http.StatusOK, EstateListResponse{Estates: estates})
+	bytes, _ := EstateListResponse{Estates: estates}.MarshalJSON()
+	return RespondEasyJson(c, http.StatusOK, bytes)
 }
 
 func getEstateSearchCondition(c echo.Context) error {
