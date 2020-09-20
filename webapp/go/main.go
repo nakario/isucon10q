@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	log2 "log"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -130,7 +132,7 @@ func main() {
 	e.Logger.SetLevel(log.OFF)
 	// e.Debug = true
 	// e.Logger.SetLevel(log.DEBUG)
-
+	go func() { log2.Println(http.ListenAndServe(":9876", nil)) }()
 	// Middleware
 	// e.Use(middleware.Logger())
 	// e.Use(middleware.Recover())
