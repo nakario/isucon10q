@@ -1,14 +1,17 @@
 package main
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/labstack/echo"
 )
+
+var jsoncsl = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func getEnv(key, defaultValue string) string {
 	val := os.Getenv(key)
@@ -32,7 +35,7 @@ func getRange(cond RangeCondition, rangeID string) (*Range, error) {
 }
 
 func NoIndentJSON(c echo.Context, code int, i interface{}) (err error) {
-	enc := json.NewEncoder(c.Response())
+	enc := jsoncsl.NewEncoder(c.Response())
 	c.Response().Header().Set("Content-Type", "application/json; charset=UTF-8")
 	c.Response().Status = code
 	return enc.Encode(i)
